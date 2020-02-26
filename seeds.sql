@@ -26,3 +26,4 @@ VALUES ("Sales Lead", 100000),
         ("Legal Team Lead", 250000),
         ("Lawyer", 190000); 
     
+    
