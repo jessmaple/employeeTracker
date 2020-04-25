@@ -122,33 +122,87 @@ function byManager() {
   );
 }
 
-function lookup(tableName, columnName){
-  return new Promise ((resolve, reject)=>{
-    connection.query(`select ${columnName}`)
-  })
+function lookup(tableName, columnName, customSelect) {
+  return new Promise((resolve, reject) => {
+      let sql = ""
+     if (columnName.length===0){
+       sql=customSelect
+
+     }
+     else{
+     sql=`select ${columnName} from ${tableName} order by ${columnName}`
+     }
+
+
+    let statement = connection.query(
+      sql
+      ,
+      function (err, res) {
+        resolve(res);
+      }
+    );
+
+    console.log(statement.sql);
+  });
 }
 
 function addEmployee() {
-  inquirer.prompt([
-    {
-      type: "input",
-      message: "What is your first name?",
-      name: "firstName",
-    },
-    {
-      type: "input",
-      message: "What is your last name?",
-      name: "lastName",
-    },
-    {
-      type:"list",
-      message:"Choose your role",
-      name:"role",
+  lookup("role", "title", "").then((role) => {
+    console.log(role);
+    let newRole = role.map((role) => {
+      return role.title;
+    });
 
-    }
-  ]);
+    lookup(
+      "employee",
+      "",
+      `SELECT concat(employee2.first_name,' ', employee2.last_name) name FROM employee_DB.employee
+    left join employee employee2 on employee.manager_id = employee2.id
+     where employee.manager_id is not null;`
+    ).then((manager) => {
+      console.log(manager);
+      let newManager = manager.map((manager) => {
+        return manager.name;
+      });
 
-  //connection.query(`Insert Into employee ()`)
+      inquirer
+        .prompt([
+          {
+            type: "input",
+            message: "What is your first name?",
+            name: "firstName",
+          },
+          {
+            type: "input",
+            message: "What is your last name?",
+            name: "lastName",
+          },
+          {
+            type: "list",
+            message: "Choose your role",
+            name: "role",
+            choices: newRole,
+          },
+          {
+            type: "list",
+            message: "Who is employee's manager?",
+            choices: newManager,
+            name: "manager",
+          },
+        ])
+        .then((input) => {
+          console.log(
+            input.firstName,
+            input.lastName,
+            input.role,
+            input.manager
+          );
+          // lookup("role", "id")
+
+          //  connection.query(`Insert Into employee ()`)
+        });
+    });
+  });
 }
 
 function removeEmployee() {}
