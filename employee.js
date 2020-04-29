@@ -122,23 +122,16 @@ function byManager() {
 
 function lookup(tableName, columnName, customSelect) {
   return new Promise((resolve, reject) => {
-      let sql = ""
-     if (columnName.length===0){
-       sql=customSelect
+    let sql = "";
+    if (columnName.length === 0) {
+      sql = customSelect;
+    } else {
+      sql = `select ${columnName} from ${tableName} order by ${columnName}`;
+    }
 
-     }
-     else{
-     sql=`select ${columnName} from ${tableName} order by ${columnName}`
-     }
-
-
-    let statement = connection.query(
-      sql
-      ,
-      function (err, res) {
-        resolve(res);
-      }
-    );
+    let statement = connection.query(sql, function (err, res) {
+      resolve(res);
+    });
 
     console.log(statement.sql);
   });
@@ -195,26 +188,34 @@ function addEmployee() {
             input.role,
             input.manager
           );
-          lookup("role", "", `select id from role where title = "${input.role}"`).then(results =>{
-            console.log(results)
-            console.log(results[0].id)
+          lookup(
+            "role",
+            "",
+            `select id from role where title = "${input.role}"`
+          ).then((results) => {
+            console.log(results);
+            console.log(results[0].id);
 
-            var roleId = results[0].id
-               lookup("employee", "", `select id from employee where concat(employee.first_name,' ', employee.last_name) = "${input.manager}"`).then(results => {
-                 console.log(results)
-                 console.log(results[0].id)
-                 var employeeId = results[0].id
-                          
+            var roleId = results[0].id;
+            lookup(
+              "employee",
+              "",
+              `select id from employee where concat(employee.first_name,' ', employee.last_name) = "${input.manager}"`
+            ).then((results) => {
+              console.log(results);
+              console.log(results[0].id);
+              var employeeId = results[0].id;
 
-                 connection.query(`
+              connection.query(
+                `
                  insert into employee(first_name, last_name, role_id, manager_id) values("${input.firstName}", "${input.lastName}", ${roleId}, ${employeeId})
-                 `, function(err, data){
-
-                  menu()
-                 })
-
-               })
-          })
+                 `,
+                function (err, data) {
+                  menu();
+                }
+              );
+            });
+          });
 
           //  connection.query(`Insert Into employee ()`)
         });
@@ -223,25 +224,89 @@ function addEmployee() {
 }
 
 function removeEmployee() {
-  lookup("employee", "", ` SELECT concat(employee.first_name,' ', employee.last_name) fullName from employee order by first_name; `).then(results => {
-    let newResult = results.map(person => {
-      return person.fullName
-    })
-    inquirer.prompt({
-      type:"list", 
-      message: "Who do you want to remove?",
-      choices: [newResult]
-    }).then(input => {
-      lookup("employee", "", `SELECT id from employee where concat(employee.first_name,' ', employee.last_name) = "John Doe"`).then(results => {
-        let id = results[0].id
-        connection.query(` DELETE from employee where id = ${id}`)
+  lookup(
+    "employee",
+    "",
+    ` SELECT concat(employee.first_name,' ', employee.last_name) fullName from employee order by first_name; `
+  ).then((results) => {
+    let newResult = results.map((person) => {
+      return person.fullName;
+    });
+    inquirer
+      .prompt({
+        type: "list",
+        message: "Who do you want to remove?",
+        choices: newResult,
+        name: "employeeName",
       })
-    })
-  })
-  
+      .then((input) => {
+        lookup(
+          "employee",
+          "",
+          `SELECT id from employee where concat(employee.first_name,' ', employee.last_name) = "${input.employeeName}"`
+        ).then((results) => {
+          let id = results[0].id;
+          connection.query(` DELETE from employee where id = ${id}`, function (
+            err,
+            res
+          ) {
+            menu();
+          });
+        });
+      });
+  });
 }
 
-function updateRole() {}
+function updateRole() {
+  lookup(
+    "employee",
+    "",
+    ` SELECT concat(employee.first_name,' ', employee.last_name) fullName from employee order by first_name; `
+  ).then((results) => {
+    let newResult = results.map((person) => {
+      return person.fullName;
+    });
+
+    inquirer
+      .prompt({
+        type: "list",
+        message: "which person do you want to update?",
+        choices: newResult,
+        name: employee,
+      })
+      .then((input) => {
+        lookup(
+          "employee",
+          "",
+          ` SELECT id from employee where concat(employee.first_name,' ', employee.last_name) = "${input.employee}"`
+        ).then((result) => {
+          let employee_id = result[0].id;
+          lookup("role", "title", ``).then((result) => {
+            let newResult = result.map((role) => {
+              return role.title;
+            });
+
+            inquirer
+              .prompt({
+                type: "list",
+                message: "which role do you want to update?",
+                choices: newResult,
+                name: "title",
+              })
+              .then((input) => {
+                lookup(
+                  "role",
+                  "",
+                  ` SELECT id from role where title = "Lawyer"`
+                ).then((result) => {
+                  let role_id = result[0].id;
+                });
+              });
+          });
+        });
+      });
+  });
+}
 
 function updateManager() {}
 
