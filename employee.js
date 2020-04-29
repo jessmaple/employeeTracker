@@ -314,10 +314,10 @@ function updateRole() {
   });
 }
 
-function updateManager() {}
+// function updateManager() {}
 
-function viewAllRoles() {}
+// function viewAllRoles() {}
 
-function addRole() {}
+// function addRole() {}
 
-function removeRole() {}
+// function removeRole() {}
