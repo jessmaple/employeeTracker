@@ -272,7 +272,7 @@ function updateRole() {
         type: "list",
         message: "which person do you want to update?",
         choices: newResult,
-        name: employee,
+        name: "employee"
       })
       .then((input) => {
         lookup(
@@ -297,9 +297,15 @@ function updateRole() {
                 lookup(
                   "role",
                   "",
-                  ` SELECT id from role where title = "Lawyer"`
+                  ` SELECT id from role where title = "${input.title}"`
                 ).then((result) => {
                   let role_id = result[0].id;
+                  connection.query(
+                    ` update employee set role_id = ${role_id} where id = ${employee_id}`,
+                    function (err, res) {
+                      menu();
+                    }
+                  );
                 });
               });
           });
